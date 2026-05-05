@@ -17,6 +17,8 @@ logo: /assets/images/og-image.png
 
 plugins:
   - jekyll-seo-tag
+  - jekyll-minifier
+
 
 markdown: kramdown
 exclude:
