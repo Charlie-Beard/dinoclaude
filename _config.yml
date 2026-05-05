@@ -1,0 +1,27 @@
+title: DinoClaude
+description: >-
+  Jump over CONTEXT LIMIT walls and duck under OUT OF TOKENS clouds.
+  A browser-based runner game — no install required.
+url: "https://dinoclaude.com"
+baseurl: ""
+
+author:
+  name: Charles Beard
+
+# Twitter/X: uncomment and fill in when you have a handle
+# twitter:
+#   username: yourhandle
+#   card: summary_large_image
+
+logo: /assets/images/og-image.png
+
+plugins:
+  - jekyll-seo-tag
+
+markdown: kramdown
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - "*.sh"
+  - vendor/
+  - design/

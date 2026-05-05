@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <!-- Background -->
+  <rect width="1200" height="630" fill="#fffbf5"/>
+
+  <!-- Ground line -->
+  <rect x="0" y="500" width="1200" height="3" fill="#dbe3ee" opacity="0.8"/>
+
+  <!-- ── Text (left side) ── -->
+  <!-- Title -->
+  <text x="80" y="230" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif"
+        font-size="96" font-weight="800" fill="#122033" letter-spacing="-3">DinoClaude</text>
+  <!-- Tagline -->
+  <text x="82" y="298" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif"
+        font-size="36" font-weight="400" fill="#516072">Jump the Context Limit.</text>
+  <!-- Sub-tagline -->
+  <text x="82" y="348" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif"
+        font-size="28" font-weight="400" fill="#8a9ab0">A browser-based runner game.</text>
+
+  <!-- ── Mascot (center-right, mid-jump pose) ── -->
+  <!-- Scale: P=16 (original P=6, scaling ~2.67x for visual weight) -->
+  <!-- Origin: bx=700, by=470 (bottom of sprite = ground level) -->
+  <!-- sq(bx, by, col, row, w, h) → fillRect(bx+col*P, by-(row+h)*P, w*P, h*P) -->
+  <!-- P=16 in SVG space -->
+
+  <!-- Body: sq(0,3,8,6) OR #D4673D -->
+  <rect x="700" y="150" width="128" height="96" fill="#D4673D"/>
+  <!-- Body top darker strip: sq(0,3,8,1) OR2 -->
+  <rect x="700" y="150" width="128" height="16" fill="#B85530"/>
+  <!-- Head band (visor area): sq(0,9,8,2) part of body extension -->
+
+  <!-- Legs (running - right leg forward, left back) -->
+  <!-- Right leg forward: sq(5,0,2,3) OR2 -->
+  <rect x="780" y="422" width="32" height="48" fill="#B85530"/>
+  <!-- Left leg back: sq(1,0,2,1) OR -->
+  <rect x="716" y="454" width="32" height="16" fill="#D4673D"/>
+
+  <!-- Arm right (raised for jump): sq(9,2,2,2) OR -->
+  <rect x="844" y="214" width="32" height="32" fill="#D4673D"/>
+  <!-- Arm left (raised): sq(-3,2,2,2) OR -->
+  <rect x="652" y="214" width="32" height="32" fill="#D4673D"/>
+
+  <!-- Face/head area: sq(0,9,8,2) OR body top -->
+  <rect x="700" y="86" width="128" height="64" fill="#D4673D"/>
+  <!-- Head top: sq(0,10,8,1) -->
+  <rect x="700" y="70" width="128" height="16" fill="#D4673D"/>
+
+  <!-- Visor/eye left: sq(1,6,2,2) DK #1E0A02 -->
+  <rect x="716" y="246" width="32" height="32" fill="#1E0A02"/>
+  <!-- Visor/eye right: sq(5,6,2,2) DK -->
+  <rect x="780" y="246" width="32" height="32" fill="#1E0A02"/>
+
+  <!-- Antennae/ears: sq(1,9,2,2) + sq(5,9,2,2) -->
+  <rect x="716" y="86" width="32" height="32" fill="#D4673D"/>
+  <rect x="780" y="86" width="32" height="32" fill="#D4673D"/>
+
+  <!-- ── Brick wall obstacle ── -->
+  <!-- Wall: 3 bricks wide × 4 bricks tall, each brick ~90×38, gap 4px -->
+  <!-- Position: x=980, bottom at y=500 -->
+  <!-- Row 1 (bottom) -->
+  <rect x="980" y="354" width="86" height="34" rx="3" fill="#8F3820"/>
+  <rect x="980" y="354" width="86" height="4" fill="#7A2E18"/>
+  <rect x="1070" y="354" width="86" height="34" rx="3" fill="#8F3820"/>
+  <rect x="1070" y="354" width="86" height="4" fill="#7A2E18"/>
+
+  <!-- Row 2 (offset) -->
+  <rect x="937" y="316" width="86" height="34" rx="3" fill="#8F3820"/>
+  <rect x="937" y="316" width="86" height="4" fill="#7A2E18"/>
+  <rect x="1027" y="316" width="86" height="34" rx="3" fill="#8F3820"/>
+  <rect x="1027" y="316" width="86" height="4" fill="#7A2E18"/>
+  <rect x="1117" y="316" width="39" height="34" rx="3" fill="#8F3820"/>
+  <rect x="1117" y="316" width="39" height="4" fill="#7A2E18"/>
+
+  <!-- Row 3 -->
+  <rect x="980" y="278" width="86" height="34" rx="3" fill="#7A2E18"/>
+  <rect x="980" y="278" width="86" height="4" fill="#5E2010"/>
+  <rect x="1070" y="278" width="86" height="34" rx="3" fill="#7A2E18"/>
+  <rect x="1070" y="278" width="86" height="4" fill="#5E2010"/>
+
+  <!-- Row 4 (top) -->
+  <rect x="937" y="240" width="86" height="34" rx="3" fill="#7A2E18"/>
+  <rect x="937" y="240" width="86" height="4" fill="#5E2010"/>
+  <rect x="1027" y="240" width="86" height="34" rx="3" fill="#7A2E18"/>
+  <rect x="1027" y="240" width="86" height="4" fill="#5E2010"/>
+
+  <!-- "CONTEXT LIMIT" label on wall -->
+  <text x="1047" y="234" text-anchor="middle"
+        font-family="'SF Mono', 'Fira Code', monospace"
+        font-size="15" font-weight="700" fill="#7A2E18" letter-spacing="1">CONTEXT LIMIT</text>
+
+  <!-- Shadow under mascot (mid-jump — faint ellipse on ground) -->
+  <ellipse cx="764" cy="503" rx="72" ry="8" fill="#122033" opacity="0.08"/>
+
+  <!-- Motion lines behind mascot -->
+  <line x1="620" y1="260" x2="668" y2="260" stroke="#D4673D" stroke-width="3" stroke-linecap="round" opacity="0.35"/>
+  <line x1="610" y1="290" x2="666" y2="290" stroke="#D4673D" stroke-width="3" stroke-linecap="round" opacity="0.25"/>
+  <line x1="625" y1="320" x2="668" y2="320" stroke="#D4673D" stroke-width="3" stroke-linecap="round" opacity="0.2"/>
+</svg>
