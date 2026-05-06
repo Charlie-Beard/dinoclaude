@@ -19,6 +19,9 @@ plugins:
   - jekyll-seo-tag
   - jekyll-minifier
 
+jekyll-minifier:
+  uglify_js: false
+
 
 markdown: kramdown
 exclude:

@@ -33,6 +33,9 @@ jobs:
           sudo apt-get install -y pngquant
           pngquant --force --ext .png --quality=75-95 assets/images/og-image.png
 
+      - name: Minify JavaScript
+        run: npx --yes terser assets/js/game.js -o assets/js/game.js --compress --mangle
+
       - run: bundle exec jekyll build --baseurl ""
         env:
           JEKYLL_ENV: production
