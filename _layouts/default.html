@@ -8,6 +8,23 @@
     <link rel="preload" href="{{ '/assets/js/game.js' | relative_url }}?v={{ asset_v }}" as="script">
     <link rel="stylesheet" href="{{ '/assets/css/main.css' | relative_url }}?v={{ asset_v }}">
     {% seo %}
+    <link rel="apple-touch-icon" href="{{ '/favicon.svg' | relative_url }}">
+    <meta name="theme-color" content="#ffffff">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "VideoGame",
+      "name": "{{ site.title }}",
+      "description": "{{ site.description | strip_newlines }}",
+      "url": "{{ site.url }}/",
+      "genre": "Endless Runner",
+      "gamePlatform": "Web Browser",
+      "applicationCategory": "Game",
+      "operatingSystem": "Any",
+      "author": { "@type": "Person", "name": "{{ site.author.name }}" },
+      "image": "{{ site.url }}/assets/images/og-image.png"
+    }
+    </script>
   </head>
   <body>
     {{ content }}
