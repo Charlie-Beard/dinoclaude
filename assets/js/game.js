@@ -2,6 +2,7 @@
   'use strict';
 
   const canvas = document.getElementById('game-canvas');
+  if (!canvas) return;
   const ctx    = canvas.getContext('2d');
 
   // ── Palette ──────────────────────────────────────────────────────────────
@@ -30,8 +31,22 @@
   const BASE_SPD = 5;
   const MAX_SPD  = 15;
 
+  // ── Tuning constants ──────────────────────────────────────────────────────
+  const MAX_DPR            = 3;
+  const GROUND_Y_RATIO     = 0.76;
+  const SCORE_DIVISOR      = 8;
+  const SPD_ACCEL          = 0.0117;
+  const SPAWN_CD_BASE      = 195;
+  const SPAWN_CD_FACTOR    = 0.11;
+  const SPAWN_CD_RAND      = 48;
+  const SPAWN_CD_MIN       = 50;
+  const COLLISION_MARGIN   = 7;
+  const CLOUD_PUFF_R       = 14;
+  const DEATH_DELAY_FRAMES = 30;
+  const SYS_FONT           = '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+
   // ── State ────────────────────────────────────────────────────────────────
-  const S = { IDLE: 0, RUNNING: 1, DEAD: 2, PAUSED: 3 };
+  const S = Object.freeze({ IDLE: 0, RUNNING: 1, DEAD: 2, PAUSED: 3 });
   let state = S.IDLE;
 
   let W, H, GY, dpr;
@@ -48,7 +63,7 @@
 
   function initAudio() {
     if (audioCtx) return;
-    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (_) {}
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { console.warn('Audio unavailable:', e); }
   }
 
   function playSound(type) {
@@ -97,16 +112,18 @@
   // ── Particles ─────────────────────────────────────────────────────────────
   let particles = [];
 
+  function pushParticle(x, y, dx, dy, life, rgb) {
+    particles.push({ x, y, dx, dy, life, max: life, rgb });
+  }
+
   function spawnDust() {
     const cx = CHAR_X + CHAR_W * 0.5;
     for (let i = 0; i < 5; i++) {
-      particles.push({
-        x: cx + (Math.random() - 0.5) * 28,
-        y: GY,
-        dx: (Math.random() - 0.5) * 2.2,
-        dy: -(Math.random() * 1.8 + 0.4),
-        life: 18, max: 18, rgb: '212,103,61',
-      });
+      pushParticle(
+        cx + (Math.random() - 0.5) * 28, GY,
+        (Math.random() - 0.5) * 2.2, -(Math.random() * 1.8 + 0.4),
+        18, '212,103,61'
+      );
     }
   }
 
@@ -114,28 +131,23 @@
     const cx = CHAR_X + CHAR_W * 0.5;
     for (let i = 0; i < 5; i++) {
       const side = i % 2 === 0 ? -1 : 1;
-      particles.push({
-        x: cx + side * (6 + Math.random() * 12),
-        y: GY,
-        dx: side * (1.2 + Math.random() * 1.4),
-        dy: Math.random() * 0.8,
-        life: 14, max: 14, rgb: '212,103,61',
-      });
+      pushParticle(
+        cx + side * (6 + Math.random() * 12), GY,
+        side * (1.2 + Math.random() * 1.4), Math.random() * 0.8,
+        14, '212,103,61'
+      );
     }
   }
 
   function spawnDuckDust(rising) {
     const cx = CHAR_X + CHAR_W * 0.5;
-    const count = 4;
-    for (let i = 0; i < count; i++) {
+    for (let i = 0; i < 4; i++) {
       const side = i % 2 === 0 ? -1 : 1;
-      particles.push({
-        x: cx + side * (8 + Math.random() * 10),
-        y: GY - (rising ? 14 : 4),
-        dx: side * (1.0 + Math.random() * 1.2),
-        dy: rising ? -(0.8 + Math.random() * 1.2) : (Math.random() * 0.4),
-        life: 14, max: 14, rgb: '90,148,255',
-      });
+      pushParticle(
+        cx + side * (8 + Math.random() * 10), GY - (rising ? 14 : 4),
+        side * (1.0 + Math.random() * 1.2), rising ? -(0.8 + Math.random() * 1.2) : Math.random() * 0.4,
+        14, '90,148,255'
+      );
     }
   }
 
@@ -187,7 +199,7 @@
     ctx.globalAlpha = alpha;
     ctx.textAlign    = 'center';
     ctx.textBaseline = 'middle';
-    ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    ctx.font = `bold 16px ${SYS_FONT}`;
     const tw  = ctx.measureText(milestoneMsg).width;
     const pad = 18;
     const bw  = tw + pad * 2, bh = 32;
@@ -207,7 +219,7 @@
     ctx.globalAlpha  = alpha;
     ctx.textAlign    = 'center';
     ctx.textBaseline = 'middle';
-    ctx.font = 'bold 13px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    ctx.font = `bold 13px ${SYS_FONT}`;
     const tw  = ctx.measureText(nearMissMsg).width;
     const bw  = tw + 24, bh = 26;
     const cy  = H * 0.44;
@@ -326,7 +338,7 @@
     rr(bx, by, bw, bh, 8, C_ACCENT);
     ctx.save();
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.font = 'bold 12px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    ctx.font = `bold 12px ${SYS_FONT}`;
     ctx.fillStyle = '#ffffff';
     ctx.fillText('⚡ AutoClicker', bx + bw / 2, by + bh / 2);
     ctx.restore();
@@ -363,12 +375,12 @@
     ctx.save();
     ctx.textAlign = 'center';
 
-    ctx.font = 'bold 18px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    ctx.font = `bold 18px ${SYS_FONT}`;
     ctx.fillStyle = C_TEXT;
     ctx.textBaseline = 'alphabetic';
     ctx.fillText('AutoClicker', W / 2, my + 46);
 
-    ctx.font = '13px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    ctx.font = `13px ${SYS_FONT}`;
     ctx.fillStyle = C_MUTED;
     const lines = [
       'AutoClicker will automatically jump and duck',
@@ -385,7 +397,7 @@
 
     modalCancelRect = { x: cbx, y: btnY, w: cancelW, h: btnH };
     rr(cbx, btnY, cancelW, btnH, 8, 'rgba(18,32,51,0.09)');
-    ctx.font = 'bold 13px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    ctx.font = `bold 13px ${SYS_FONT}`;
     ctx.fillStyle = C_TEXT;
     ctx.textBaseline = 'middle';
     ctx.fillText('Cancel', cbx + cancelW / 2, btnY + btnH / 2);
@@ -402,6 +414,26 @@
 
   function inRect(x, y, r) {
     return r && x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h;
+  }
+
+  // Shared UI tap handler for both touch and click events.
+  // Returns true if a UI element consumed the tap; caller should return early.
+  // Pass dismissModal=true from click events to auto-close modal on backdrop tap.
+  function handleUITap(tx, ty, dismissModal) {
+    if (showAutoModal) {
+      if (inRect(tx, ty, modalCancelRect)) { showAutoModal = false; return true; }
+      if (inRect(tx, ty, modalStartRect))  { showAutoModal = false; autoMode = true; begin(); return true; }
+      if (dismissModal) showAutoModal = false;
+      return true;
+    }
+    if (state === S.IDLE && inRect(tx, ty, autoBtnRect)) { showAutoModal = true; return true; }
+    if (autoMode && state === S.RUNNING && inRect(tx, ty, autoIndicatorRect)) { stopAutoMode(); return true; }
+    if (autoMode && state === S.DEAD && inRect(tx, ty, stopAutoBtnRect)) { stopAutoMode(); return true; }
+    if (!autoMode && state === S.DEAD) {
+      if (inRect(tx, ty, shareBtnRect))   { handleShare(); return true; }
+      if (inRect(tx, ty, tryAutoBtnRect)) { autoMode = true; begin(); return true; }
+    }
+    return false;
   }
 
   function canvasXY(e) {
@@ -481,7 +513,7 @@
   // ── Resize ───────────────────────────────────────────────────────────────
 
   function resize() {
-    dpr = Math.min(window.devicePixelRatio || 1, 3);
+    dpr = Math.min(window.devicePixelRatio || 1, MAX_DPR);
     const el = canvas.parentElement;
     W = el.offsetWidth;
     H = el.offsetHeight;
@@ -490,7 +522,7 @@
     canvas.style.width  = W + 'px';
     canvas.style.height = H + 'px';
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    GY = Math.round(H * 0.76);
+    GY = Math.round(H * GROUND_Y_RATIO);
     if (state !== S.RUNNING) char.y = GY;
     initBg();
   }
@@ -508,7 +540,7 @@
   function jump() {
     if (state === S.PAUSED) { state = S.RUNNING; return; }
     if (state === S.IDLE)   { begin(); return; }
-    if (state === S.DEAD)   { if (deathFrame < 30) return; begin(); return; }
+    if (state === S.DEAD)   { if (deathFrame < DEATH_DELAY_FRAMES) return; begin(); return; }
     if (char.ground && !char.ducking) {
       char.vy = JUMP_VY; char.ground = false;
       buzz(12); playSound('jump'); spawnJumpDust();
@@ -571,6 +603,9 @@
   let spacePending   = false;
   let spaceDown      = false;
 
+  const inputAC = new AbortController();
+  const inputSig = { signal: inputAC.signal };
+
   window.addEventListener('keydown', e => {
     if (e.code === 'Escape') {
       if (showAutoModal)              { showAutoModal = false; return; }
@@ -594,7 +629,7 @@
       spacePending   = true;
       spaceHoldTimer = setTimeout(() => { spacePending = false; duck(true); }, 150);
     }
-  });
+  }, inputSig);
 
   window.addEventListener('keyup', e => {
     if (e.code !== 'Space') return;
@@ -605,7 +640,7 @@
       if (spacePending) { spacePending = false; jump(); }
       else              { duck(false); }
     }
-  });
+  }, inputSig);
 
   // ── Touch input ───────────────────────────────────────────────────────────
 
@@ -621,7 +656,7 @@
 
     if (showAutoModal || (autoMode && state === S.RUNNING)) return;
     touchHoldTimer = setTimeout(() => { touchDucking = true; duck(true); }, 150);
-  }, { passive: false });
+  }, { passive: false, signal: inputAC.signal });
 
   canvas.addEventListener('touchend', e => {
     e.preventDefault();
@@ -634,28 +669,7 @@
       const tx = (t.clientX - rect.left) * (W / rect.width);
       const ty = (t.clientY - rect.top)  * (H / rect.height);
 
-      if (showAutoModal) {
-        if (inRect(tx, ty, modalCancelRect)) { showAutoModal = false; return; }
-        if (inRect(tx, ty, modalStartRect))  { showAutoModal = false; autoMode = true; begin(); return; }
-        return;
-      }
-
-      if (state === S.IDLE && inRect(tx, ty, autoBtnRect)) {
-        showAutoModal = true; return;
-      }
-
-      if (autoMode && state === S.RUNNING && inRect(tx, ty, autoIndicatorRect)) {
-        stopAutoMode(); return;
-      }
-
-      if (autoMode && state === S.DEAD && inRect(tx, ty, stopAutoBtnRect)) {
-        stopAutoMode(); return;
-      }
-
-      if (!autoMode && state === S.DEAD) {
-        if (inRect(tx, ty, shareBtnRect))    { handleShare(); return; }
-        if (inRect(tx, ty, tryAutoBtnRect))  { autoMode = true; begin(); return; }
-      }
+      if (handleUITap(tx, ty, false)) return;
 
       if (!touchDucking) {
         if (!autoMode || state !== S.RUNNING) jump();
@@ -663,45 +677,24 @@
         touchDucking = false; duck(false);
       }
     }
-  }, { passive: false });
+  }, { passive: false, signal: inputAC.signal });
 
   canvas.addEventListener('touchcancel', e => {
     e.preventDefault(); touchId = null;
     clearTimeout(touchHoldTimer);
     if (touchDucking) { touchDucking = false; duck(false); }
-  }, { passive: false });
+  }, { passive: false, signal: inputAC.signal });
 
   // ── Mouse click handler ───────────────────────────────────────────────────
 
   canvas.addEventListener('click', e => {
-    const pos = canvasXY(e);
+    const { x, y } = canvasXY(e);
 
-    if (showAutoModal) {
-      if (inRect(pos.x, pos.y, modalCancelRect)) { showAutoModal = false; return; }
-      if (inRect(pos.x, pos.y, modalStartRect))  { showAutoModal = false; autoMode = true; begin(); return; }
-      showAutoModal = false; return;
-    }
+    if (handleUITap(x, y, true)) return;
 
-    if (state === S.IDLE && inRect(pos.x, pos.y, autoBtnRect)) {
-      showAutoModal = true; return;
-    }
-
-    if (autoMode && state === S.RUNNING && inRect(pos.x, pos.y, autoIndicatorRect)) {
-      stopAutoMode(); return;
-    }
-
-    if (autoMode && state === S.DEAD && inRect(pos.x, pos.y, stopAutoBtnRect)) {
-      stopAutoMode(); return;
-    }
-
-    if (!autoMode && state === S.DEAD) {
-      if (inRect(pos.x, pos.y, shareBtnRect))   { handleShare(); return; }
-      if (inRect(pos.x, pos.y, tryAutoBtnRect))  { autoMode = true; begin(); return; }
-      begin(); return;
-    }
-
+    if (!autoMode && state === S.DEAD) { begin(); return; }
     if (state === S.PAUSED && !autoMode) { jump(); return; }
-  });
+  }, inputSig);
 
   // ── Mouse hold = duck ─────────────────────────────────────────────────────
 
@@ -713,17 +706,22 @@
     if (showAutoModal || (autoMode && state === S.RUNNING)) return;
     mouseDucking   = false;
     mouseHoldTimer = setTimeout(() => { mouseDucking = true; duck(true); }, 150);
-  });
+  }, inputSig);
 
   canvas.addEventListener('mouseup', e => {
     if (e.button !== 0) return;
     clearTimeout(mouseHoldTimer);
     if (mouseDucking) { mouseDucking = false; duck(false); }
-  });
+  }, inputSig);
 
   canvas.addEventListener('mouseleave', () => {
     clearTimeout(mouseHoldTimer);
     if (mouseDucking) { mouseDucking = false; duck(false); }
+  }, inputSig);
+
+  window.addEventListener('beforeunload', () => {
+    ro.disconnect();
+    inputAC.abort();
   });
 
   // ── Bitmap pixel font (5×5) ───────────────────────────────────────────────
@@ -818,7 +816,7 @@
   // ── Collision ─────────────────────────────────────────────────────────────
 
   function hits(ob) {
-    const m  = 7;
+    const m  = COLLISION_MARGIN;
     const lx = CHAR_X + m,           rx = CHAR_X + CHAR_W - m;
     const ty = char.y - char.h + m,  by = char.y - m;
     return lx < ob.x + ob.w - m && rx > ob.x + m &&
@@ -841,8 +839,8 @@
     if (state !== S.RUNNING) return;
 
     frame++;
-    score = Math.floor(frame / 8);
-    speed = Math.min(BASE_SPD + score * 0.0117, MAX_SPD);
+    score = Math.floor(frame / SCORE_DIVISOR);
+    speed = Math.min(BASE_SPD + score * SPD_ACCEL, MAX_SPD);
 
     const wasGround = char.ground;
 
@@ -879,7 +877,7 @@
 
     if (--spawnCD <= 0) {
       spawnObstacle();
-      spawnCD = Math.max(50, Math.round(195 - score * 0.11) + Math.floor(Math.random() * 48));
+      spawnCD = Math.max(SPAWN_CD_MIN, Math.round(SPAWN_CD_BASE - score * SPAWN_CD_FACTOR) + Math.floor(Math.random() * SPAWN_CD_RAND));
     }
 
     for (let i = obstacles.length - 1; i >= 0; i--) {
@@ -1011,7 +1009,7 @@
   // ── Draw cloud ceiling ("OUT OF TOKENS") ──────────────────────────────────
 
   function drawCloud(ob) {
-    const PUFF_R   = 14;
+    const PUFF_R   = CLOUD_PUFF_R;
     const BODY_COL = 'rgba(16,26,50,0.97)';
     const EDGE_COL = 'rgba(80,130,220,0.35)';
 
@@ -1170,13 +1168,13 @@
 
     ctx.save();
     ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
-    ctx.font = 'bold 22px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    ctx.font = `bold 22px ${SYS_FONT}`;
     ctx.fillStyle = C_TEXT;
     ctx.fillText('DinoClaude', W / 2, H / 2 - 36);
-    ctx.font = '14px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    ctx.font = `14px ${SYS_FONT}`;
     ctx.fillStyle = C_MUTED;
     ctx.fillText('Tap or press Space to begin', W / 2, H / 2 - 10);
-    ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    ctx.font = `12px ${SYS_FONT}`;
     ctx.fillStyle = C_SUBTLE;
     if (W >= 480) {
       ctx.fillText('Jump over  CONTEXT LIMIT  ·  Duck under  OUT OF TOKENS', W / 2, H / 2 + 14);
@@ -1194,7 +1192,7 @@
     ctx.save();
     ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
 
-    const SYS = '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    const SYS = SYS_FONT;
 
     ctx.font = `12px ${SYS}`;
     ctx.fillStyle = C_SUBTLE;
@@ -1268,10 +1266,10 @@
     ctx.save();
     ctx.textAlign    = 'center';
     ctx.textBaseline = 'alphabetic';
-    ctx.font = 'bold 24px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    ctx.font = `bold 24px ${SYS_FONT}`;
     ctx.fillStyle = C_TEXT;
     ctx.fillText('PAUSED', W / 2, H / 2 - 14);
-    ctx.font = '14px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    ctx.font = `14px ${SYS_FONT}`;
     ctx.fillStyle = C_MUTED;
     ctx.fillText('Tap or press Space · Esc to resume', W / 2, H / 2 + 12);
     ctx.restore();
