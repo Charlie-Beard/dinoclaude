@@ -1,92 +1,105 @@
 #!/usr/bin/env python3
 """Generates assets/images/og-image.png for DinoClaude."""
 from PIL import Image, ImageDraw, ImageFont
-import os, sys
+import os
 
 W, H = 1200, 630
 OUT = os.path.join(os.path.dirname(__file__), '..', 'assets', 'images', 'og-image.png')
 
-BG      = (255, 251, 245)
-TEXT1   = ( 18,  32,  51)
-TEXT2   = ( 81,  96, 114)
-TEXT3   = (138, 154, 176)
-OR      = (212, 103,  61)
-OR2     = (184,  85,  48)
-DK      = ( 30,  10,   2)
-BRICK1  = (143,  56,  32)
-BRICK2  = (122,  46,  24)
-BRICK3  = ( 94,  32,  16)
-GROUND  = (219, 227, 238)
+BG     = (255, 251, 245)
+TEXT1  = ( 18,  32,  51)
+TEXT2  = ( 81,  96, 114)
+TEXT3  = (138, 154, 176)
+OR     = (212, 103,  61)
+OR2    = (184,  85,  48)
+DK     = ( 30,  10,   2)
+BRICK1 = (143,  56,  32)
+BRICK2 = (122,  46,  24)
+MORTAR = ( 74,  26,   8)
+GROUND = (219, 227, 238)
 
 img = Image.new('RGB', (W, H), BG)
-d = ImageDraw.Draw(img, 'RGBA')
+d   = ImageDraw.Draw(img, 'RGBA')
 
-# Ground line
-d.rectangle([0, 500, W, 503], fill=GROUND)
+# ── Subtle dot-grid background texture ───────────────────────────────────────
+for dot_x in range(10, W, 20):
+    for dot_y in range(10, H, 20):
+        d.ellipse([dot_x-1, dot_y-1, dot_x+1, dot_y+1], fill=(18, 32, 51, 9))
 
-# ── Pixel-art mascot ──────────────────────────────────────────────────────────
-P = 16    # 1 pixel = 16px  (game uses P=6, scaled up ~2.67x)
-bx = 710  # left edge of sprite
-by = 490  # bottom edge of sprite (ground level)
+# Ground
+d.rectangle([0, 510, W, 512], fill=GROUND)
+d.rectangle([0, 512, W, H],   fill=(245, 239, 230, 110))
+
+# ── Pixel-art mascot ─────────────────────────────────────────────────────────
+# Exact game sprite from drawChar() in game.js, no additions.
+# sq(bx, by, col, row, w, h) → fillRect(bx+col*P, by-(row+h)*P, w*P, h*P)
+# P=16, bx=850, by=400  →  character bottom at y=400, ground at y=510 (110px airborne)
+
+P  = 16
+bx = 850
+by = 400
 
 def sq(col, row, w, h, color):
     x = bx + col * P
     y = by - (row + h) * P
     d.rectangle([x, y, x + w*P - 1, y + h*P - 1], fill=color)
 
-# Body (torso)
-sq(0, 3, 8, 6, OR)
-sq(0, 3, 8, 1, OR2)       # darker bottom strip on torso
-# Face / head
-sq(0, 9, 8, 2, OR)
-sq(0, 9, 8, 1, OR2)       # brow line
-sq(0, 11, 8, 1, OR)       # top of head
-# Antennae
-sq(1, 12, 2, 1, OR)
-sq(5, 12, 2, 1, OR)
-# Eyes
-sq(1, 6, 2, 2, DK)
-sq(5, 6, 2, 2, DK)
-# Arms (raised — jump pose)
-sq(-3, 6, 3, 2, OR)
-sq( 8, 6, 3, 2, OR)
-# Legs (jumping — spread apart)
-sq(1, 0, 2, 3, OR)
-sq(5, 1, 2, 2, OR2)
+sq(1, 9, 2, 2, OR)    # left ear
+sq(5, 9, 2, 2, OR)    # right ear
+sq(0, 3, 8, 6, OR)    # body
+sq(0, 3, 8, 1, OR2)   # body: darker bottom strip
+sq(1, 6, 2, 2, DK)    # left eye
+sq(5, 6, 2, 2, DK)    # right eye
+sq(1, 0, 2, 3, OR)    # left leg  (animF=0: forward, 3 rows)
+sq(5, 1, 2, 2, OR2)   # right leg (animF=0: back,    2 rows)
 
-# Shadow ellipse on ground
+# Jump shadow
 shadow = Image.new('RGBA', (W, H), (0, 0, 0, 0))
 ds = ImageDraw.Draw(shadow)
-cx, cy, rx, ry = 770, 508, 72, 8
+cx, cy, rx, ry = 914, 514, 58, 7
 ds.ellipse([cx-rx, cy-ry, cx+rx, cy+ry], fill=(18, 32, 51, 18))
-img.paste(Image.alpha_composite(Image.new('RGBA', (W, H), (0,0,0,0)), shadow).convert('RGB'), mask=shadow.split()[3])
+img.paste(Image.alpha_composite(Image.new('RGBA', (W, H), (0, 0, 0, 0)), shadow).convert('RGB'), mask=shadow.split()[3])
 
-# Motion lines
-for x1, x2, y, alpha in [(622, 666, 318, 55), (612, 664, 352, 38), (628, 666, 386, 25)]:
-    d.rectangle([x1, y, x2, y+2], fill=OR + (alpha,))
+# Motion lines (trailing left of character at bx=850)
+for x1, x2, y, alpha in [
+    (752, 826, 278, 90),
+    (740, 825, 308, 62),
+    (748, 826, 336, 42),
+]:
+    d.rectangle([x1, y, x2, y + 3], fill=OR + (alpha,))
 
 # ── Brick wall ───────────────────────────────────────────────────────────────
-bw, bh, gap = 88, 34, 5
+# Matches game: BH=11, BG=2, BW=34 style, but scaled up for the OG image.
+wall_x, wall_y, wall_w, wall_h = 1005, 315, 140, 195
+BW, BH, BG = 44, 16, 3
 
-def brick(x, y):
-    d.rectangle([x, y, x+bw-1, y+bh-1], fill=BRICK1)
-    d.rectangle([x, y, x+bw-1, y+3],   fill=BRICK2)
+# Mortar base
+d.rectangle([wall_x, wall_y, wall_x + wall_w - 1, wall_y + wall_h - 1], fill=MORTAR)
 
-wx = 978
-for row in range(4):
-    wy = 500 - (row + 1) * (bh + gap)
-    off = 44 if row % 2 == 1 else 0
-    for col in range(3):
-        bx2 = wx + off + col * (bw + gap)
-        if bx2 + bw <= W + 20:
-            brick(bx2, wy)
+row = 0
+y   = wall_y
+while y < wall_y + wall_h:
+    offset = (BW // 2) if row % 2 == 1 else 0
+    bh     = min(BH, wall_y + wall_h - y)
+    x      = wall_x - offset
+    while x < wall_x + wall_w:
+        bxw   = max(x, wall_x)
+        bwid  = min(x + BW, wall_x + wall_w) - bxw
+        if bwid > 0 and bh > 0:
+            fill = BRICK1 if row % 2 == 0 else BRICK2
+            d.rectangle([bxw, y, bxw + bwid - 1, y + bh - 1], fill=fill)
+            # Subtle top highlight on each brick
+            d.rectangle([bxw, y, bxw + bwid - 1, y + min(2, bh - 1)], fill=OR2 + (30,))
+        x += BW + BG
+    y   += BH + BG
+    row += 1
 
 # ── Typography ───────────────────────────────────────────────────────────────
-def load_font(size, bold=False):
-    # Try system fonts on macOS, fall back to default
+def load_font(size):
     candidates = [
         '/System/Library/Fonts/SFNS.ttf',
         '/System/Library/Fonts/SFNSDisplay.ttf',
+        '/System/Library/Fonts/SFNSText.ttf',
         '/System/Library/Fonts/Helvetica.ttc',
         '/Library/Fonts/Arial.ttf',
         '/System/Library/Fonts/Arial.ttf',
@@ -99,17 +112,13 @@ def load_font(size, bold=False):
                 continue
     return ImageFont.load_default()
 
-font_title   = load_font(94, bold=True)
-font_tagline = load_font(38)
-font_sub     = load_font(28)
-font_label   = load_font(15)
+font_title   = load_font(90)
+font_tagline = load_font(36)
+font_sub     = load_font(23)
 
-d.text((80, 148), "DinoClaude", font=font_title,   fill=TEXT1)
-d.text((84, 272), "Jump the Context Limit.", font=font_tagline, fill=TEXT2)
-d.text((84, 326), "A browser-based runner game.", font=font_sub, fill=TEXT3)
-
-# CONTEXT LIMIT label above wall
-d.text((978, 218), "CONTEXT LIMIT", font=font_label, fill=BRICK2)
+d.text((70, 176), "DinoClaude",               font=font_title,   fill=TEXT1)
+d.text((74, 288), "Jump the Context Limit.",   font=font_tagline, fill=OR)
+d.text((74, 338), "A browser-based runner game.", font=font_sub,  fill=TEXT3)
 
 img.save(OUT, 'PNG', optimize=True)
-print(f"Saved {OUT} ({os.path.getsize(OUT):,} bytes)")
+print(f"Saved {OUT}  ({os.path.getsize(OUT):,} bytes)")
