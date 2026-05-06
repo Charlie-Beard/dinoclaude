@@ -1,97 +1,116 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
-  <!-- Background -->
+  <defs>
+    <!-- Subtle dot-grid texture -->
+    <pattern id="dots" width="20" height="20" patternUnits="userSpaceOnUse">
+      <circle cx="10" cy="10" r="1" fill="#122033" opacity="0.035"/>
+    </pattern>
+
+    <!-- Brick pattern anchored to wall top-left (1005, 315) -->
+    <!-- Row 1 (even): x=0–41, y=0–14 -->
+    <!-- Row 2 (odd, half-brick offset): x=-22–19, y=17–31 (tiling fills the rest) -->
+    <pattern id="bp" x="1005" y="315" width="44" height="34" patternUnits="userSpaceOnUse">
+      <rect x="0"   y="0"  width="41" height="14" fill="#8F3820" rx="1"/>
+      <rect x="-22" y="17" width="41" height="14" fill="#7A2E18" rx="1"/>
+    </pattern>
+
+    <!-- Clip path to contain brick pattern within wall bounds -->
+    <clipPath id="wc">
+      <rect x="1005" y="315" width="140" height="195"/>
+    </clipPath>
+
+    <!-- Soft orange glow behind character -->
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"   stop-color="#D4673D" stop-opacity="0.13"/>
+      <stop offset="100%" stop-color="#D4673D" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- ── Background ── -->
   <rect width="1200" height="630" fill="#fffbf5"/>
+  <rect width="1200" height="630" fill="url(#dots)"/>
 
-  <!-- Ground line -->
-  <rect x="0" y="500" width="1200" height="3" fill="#dbe3ee" opacity="0.8"/>
+  <!-- Ground line + subtle below-ground fill -->
+  <rect x="0" y="510" width="1200" height="2"   fill="#dbe3ee"/>
+  <rect x="0" y="512" width="1200" height="118" fill="#f5efe6" opacity="0.45"/>
 
-  <!-- ── Text (left side) ── -->
-  <!-- Title -->
-  <text x="80" y="230" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif"
-        font-size="96" font-weight="800" fill="#122033" letter-spacing="-3">DinoClaude</text>
-  <!-- Tagline -->
-  <text x="82" y="298" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif"
-        font-size="36" font-weight="400" fill="#516072">Jump the Context Limit.</text>
+  <!-- ── Pixel art clouds ── -->
+  <!-- Cloud 1 -->
+  <ellipse cx="755" cy="178" rx="38" ry="23" fill="#ffffff" opacity="0.85"/>
+  <ellipse cx="724" cy="186" rx="24" ry="18" fill="#ffffff" opacity="0.85"/>
+  <ellipse cx="787" cy="172" rx="24" ry="18" fill="#ffffff" opacity="0.85"/>
+
+  <!-- Cloud 2 (smaller, right side) -->
+  <ellipse cx="1110" cy="158" rx="28" ry="17" fill="#ffffff" opacity="0.72"/>
+  <ellipse cx="1085" cy="165" rx="18" ry="14" fill="#ffffff" opacity="0.72"/>
+  <ellipse cx="1132" cy="152" rx="18" ry="14" fill="#ffffff" opacity="0.72"/>
+
+  <!-- ── Typography (left panel) ── -->
+
+  <!-- Game title -->
+  <text x="70" y="250"
+        font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif"
+        font-size="84" font-weight="800" fill="#122033" letter-spacing="-3">DinoClaude</text>
+
+  <!-- Tagline in brand orange -->
+  <text x="73" y="306"
+        font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif"
+        font-size="34" font-weight="600" fill="#D4673D">Jump the Context Limit.</text>
+
   <!-- Sub-tagline -->
-  <text x="82" y="348" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif"
-        font-size="28" font-weight="400" fill="#8a9ab0">A browser-based runner game.</text>
+  <text x="73" y="350"
+        font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif"
+        font-size="22" font-weight="400" fill="#8a9ab0">A browser-based runner game.</text>
 
-  <!-- ── Mascot (center-right, mid-jump pose) ── -->
-  <!-- Scale: P=16 (original P=6, scaling ~2.67x for visual weight) -->
-  <!-- Origin: bx=700, by=470 (bottom of sprite = ground level) -->
-  <!-- sq(bx, by, col, row, w, h) → fillRect(bx+col*P, by-(row+h)*P, w*P, h*P) -->
-  <!-- P=16 in SVG space -->
+  <!-- ── Character glow ── -->
+  <ellipse cx="914" cy="308" rx="155" ry="135" fill="url(#glow)"/>
 
-  <!-- Body: sq(0,3,8,6) OR #D4673D -->
-  <rect x="700" y="150" width="128" height="96" fill="#D4673D"/>
-  <!-- Body top darker strip: sq(0,3,8,1) OR2 -->
-  <rect x="700" y="150" width="128" height="16" fill="#B85530"/>
-  <!-- Head band (visor area): sq(0,9,8,2) part of body extension -->
+  <!-- ── Pixel-art mascot (exact game sprite, P=16) ──────────────────────────
+       sq(bx, by, col, row, w, h) → fillRect(bx+col*P, by-(row+h)*P, w*P, h*P)
+       bx=850, by=400  →  character bottom at y=400, ground at y=510 (110px airborne)
 
-  <!-- Legs (running - right leg forward, left back) -->
-  <!-- Right leg forward: sq(5,0,2,3) OR2 -->
-  <rect x="780" y="422" width="32" height="48" fill="#B85530"/>
-  <!-- Left leg back: sq(1,0,2,1) OR -->
-  <rect x="716" y="454" width="32" height="16" fill="#D4673D"/>
+       Left  ear  sq(1,9,2,2): fillRect(866, 224, 32, 32)
+       Right ear  sq(5,9,2,2): fillRect(930, 224, 32, 32)
+       Body       sq(0,3,8,6): fillRect(850, 256, 128, 96)
+       Body strip sq(0,3,8,1): fillRect(850, 336, 128, 16)  ← darker bottom row
+       Left  eye  sq(1,6,2,2): fillRect(866, 272, 32, 32)
+       Right eye  sq(5,6,2,2): fillRect(930, 272, 32, 32)
+       Left  leg  sq(1,0,2,3): fillRect(866, 352, 32, 48)  ← animF=0
+       Right leg  sq(5,1,2,2): fillRect(930, 352, 32, 32)
+  ── -->
 
-  <!-- Arm right (raised for jump): sq(9,2,2,2) OR -->
-  <rect x="844" y="214" width="32" height="32" fill="#D4673D"/>
-  <!-- Arm left (raised): sq(-3,2,2,2) OR -->
-  <rect x="652" y="214" width="32" height="32" fill="#D4673D"/>
+  <!-- Ears -->
+  <rect x="866" y="224" width="32" height="32" fill="#D4673D"/>
+  <rect x="930" y="224" width="32" height="32" fill="#D4673D"/>
 
-  <!-- Face/head area: sq(0,9,8,2) OR body top -->
-  <rect x="700" y="86" width="128" height="64" fill="#D4673D"/>
-  <!-- Head top: sq(0,10,8,1) -->
-  <rect x="700" y="70" width="128" height="16" fill="#D4673D"/>
+  <!-- Body -->
+  <rect x="850" y="256" width="128" height="96" fill="#D4673D"/>
+  <!-- Body darker strip (bottom row of body block) -->
+  <rect x="850" y="336" width="128" height="16" fill="#B85530"/>
 
-  <!-- Visor/eye left: sq(1,6,2,2) DK #1E0A02 -->
-  <rect x="716" y="246" width="32" height="32" fill="#1E0A02"/>
-  <!-- Visor/eye right: sq(5,6,2,2) DK -->
-  <rect x="780" y="246" width="32" height="32" fill="#1E0A02"/>
+  <!-- Eyes (drawn on top of body) -->
+  <rect x="866" y="272" width="32" height="32" fill="#1E0A02"/>
+  <rect x="930" y="272" width="32" height="32" fill="#1E0A02"/>
 
-  <!-- Antennae/ears: sq(1,9,2,2) + sq(5,9,2,2) -->
-  <rect x="716" y="86" width="32" height="32" fill="#D4673D"/>
-  <rect x="780" y="86" width="32" height="32" fill="#D4673D"/>
+  <!-- Legs (animF=0: left leg 3 rows, right leg 2 rows starting 1 row up) -->
+  <rect x="866" y="352" width="32" height="48" fill="#D4673D"/>
+  <rect x="930" y="352" width="32" height="32" fill="#B85530"/>
+
+  <!-- Jump shadow (faint ellipse on ground below character) -->
+  <ellipse cx="914" cy="514" rx="58" ry="7" fill="#122033" opacity="0.07"/>
+
+  <!-- Motion lines (trailing behind character, left of body at x=850) -->
+  <line x1="754" y1="278" x2="826" y2="278" stroke="#D4673D" stroke-width="4"   stroke-linecap="round" opacity="0.35"/>
+  <line x1="742" y1="308" x2="825" y2="308" stroke="#D4673D" stroke-width="3"   stroke-linecap="round" opacity="0.24"/>
+  <line x1="750" y1="336" x2="826" y2="336" stroke="#D4673D" stroke-width="2.5" stroke-linecap="round" opacity="0.16"/>
 
   <!-- ── Brick wall obstacle ── -->
-  <!-- Wall: 3 bricks wide × 4 bricks tall, each brick ~90×38, gap 4px -->
-  <!-- Position: x=980, bottom at y=500 -->
-  <!-- Row 1 (bottom) -->
-  <rect x="980" y="354" width="86" height="34" rx="3" fill="#8F3820"/>
-  <rect x="980" y="354" width="86" height="4" fill="#7A2E18"/>
-  <rect x="1070" y="354" width="86" height="34" rx="3" fill="#8F3820"/>
-  <rect x="1070" y="354" width="86" height="4" fill="#7A2E18"/>
+  <!-- Dark mortar base -->
+  <rect x="1005" y="315" width="140" height="195" fill="#4A1A08"/>
+  <!-- Brick pattern clipped to wall bounds -->
+  <g clip-path="url(#wc)">
+    <rect x="1005" y="315" width="140" height="195" fill="url(#bp)"/>
+  </g>
+  <!-- Subtle top-edge highlight -->
+  <rect x="1005" y="315" width="140" height="3" fill="#C06040" opacity="0.4"/>
 
-  <!-- Row 2 (offset) -->
-  <rect x="937" y="316" width="86" height="34" rx="3" fill="#8F3820"/>
-  <rect x="937" y="316" width="86" height="4" fill="#7A2E18"/>
-  <rect x="1027" y="316" width="86" height="34" rx="3" fill="#8F3820"/>
-  <rect x="1027" y="316" width="86" height="4" fill="#7A2E18"/>
-  <rect x="1117" y="316" width="39" height="34" rx="3" fill="#8F3820"/>
-  <rect x="1117" y="316" width="39" height="4" fill="#7A2E18"/>
-
-  <!-- Row 3 -->
-  <rect x="980" y="278" width="86" height="34" rx="3" fill="#7A2E18"/>
-  <rect x="980" y="278" width="86" height="4" fill="#5E2010"/>
-  <rect x="1070" y="278" width="86" height="34" rx="3" fill="#7A2E18"/>
-  <rect x="1070" y="278" width="86" height="4" fill="#5E2010"/>
-
-  <!-- Row 4 (top) -->
-  <rect x="937" y="240" width="86" height="34" rx="3" fill="#7A2E18"/>
-  <rect x="937" y="240" width="86" height="4" fill="#5E2010"/>
-  <rect x="1027" y="240" width="86" height="34" rx="3" fill="#7A2E18"/>
-  <rect x="1027" y="240" width="86" height="4" fill="#5E2010"/>
-
-  <!-- "CONTEXT LIMIT" label on wall -->
-  <text x="1047" y="234" text-anchor="middle"
-        font-family="'SF Mono', 'Fira Code', monospace"
-        font-size="15" font-weight="700" fill="#7A2E18" letter-spacing="1">CONTEXT LIMIT</text>
-
-  <!-- Shadow under mascot (mid-jump — faint ellipse on ground) -->
-  <ellipse cx="764" cy="503" rx="72" ry="8" fill="#122033" opacity="0.08"/>
-
-  <!-- Motion lines behind mascot -->
-  <line x1="620" y1="260" x2="668" y2="260" stroke="#D4673D" stroke-width="3" stroke-linecap="round" opacity="0.35"/>
-  <line x1="610" y1="290" x2="666" y2="290" stroke="#D4673D" stroke-width="3" stroke-linecap="round" opacity="0.25"/>
-  <line x1="625" y1="320" x2="668" y2="320" stroke="#D4673D" stroke-width="3" stroke-linecap="round" opacity="0.2"/>
 </svg>
