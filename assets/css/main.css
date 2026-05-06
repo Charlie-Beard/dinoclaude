@@ -38,7 +38,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.9rem 1.25rem calc(0.9rem + var(--safe-top));
+  padding: 1.1rem 1.25rem calc(1.1rem + var(--safe-top));
   border-bottom: 1px solid rgba(219, 227, 238, 0.9);
   background: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(12px);
@@ -53,7 +53,12 @@ body {
   text-decoration: none;
 }
 
-.reset-btn {
+.header-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.header-btn {
   background: none;
   border: 1px solid rgba(81, 96, 114, 0.35);
   border-radius: 0.4rem;
@@ -62,13 +67,26 @@ body {
   font-family: var(--font-system);
   font-size: 0.82rem;
   font-weight: 500;
-  padding: 0.28rem 0.7rem;
+  padding: 0.18rem 0.7rem;
   transition: border-color 0.15s, color 0.15s;
 }
 
-.reset-btn:hover {
+.header-btn:hover {
   border-color: var(--accent);
   color: var(--accent);
+}
+
+.site-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.3rem 1.25rem calc(0.3rem + var(--safe-bottom));
+  border-top: 1px solid rgba(219, 227, 238, 0.9);
+  background: rgba(255, 255, 255, 0.96);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  letter-spacing: 0.01em;
 }
 
 main {

@@ -9,11 +9,35 @@ image: /assets/images/og-image.png
 <div class="page-shell">
   <header class="site-header">
     <a class="site-brand" href="{{ '/' | relative_url }}">DinoClaude</a>
-    <button class="reset-btn" onclick="location.reload()" aria-label="Reset game">Reset</button>
+    <div class="header-actions">
+      <button class="header-btn" onclick="shareGame()" aria-label="Share DinoClaude">Share</button>
+      <button class="header-btn" onclick="location.reload()" aria-label="Reset game">Reset</button>
+    </div>
   </header>
   <main>
     <div class="game-wrapper">
       <canvas id="game-canvas" aria-label="DinoClaude runner game"></canvas>
     </div>
   </main>
+  <footer class="site-footer">
+    <span>JS {{ site.build_js_kb }} KB · CSS {{ site.build_css_kb }} KB</span>
+    <span>Build {{ site.build_sha }}</span>
+  </footer>
 </div>
+<script>
+function shareGame() {
+  var btn = event.currentTarget;
+  if (navigator.share) {
+    navigator.share({
+      title: 'DinoClaude',
+      text: 'Jump over CONTEXT LIMIT walls and duck under OUT OF TOKENS clouds — play DinoClaude, a free browser runner game!',
+      url: location.href
+    });
+  } else if (navigator.clipboard) {
+    navigator.clipboard.writeText(location.href).then(function() {
+      btn.textContent = 'Copied!';
+      setTimeout(function() { btn.textContent = 'Share'; }, 1800);
+    });
+  }
+}
+</script>
