@@ -1,5 +1,3 @@
-require 'open3'
-
 module Jekyll
   class BuildStatsGenerator < Generator
     safe true
@@ -12,8 +10,7 @@ module Jekyll
       site.config['build_js_kb']  = format('%.1f', File.size(js_path)  / 1024.0) if File.exist?(js_path)
       site.config['build_css_kb'] = format('%.1f', File.size(css_path) / 1024.0) if File.exist?(css_path)
 
-      stdout, _, status = Open3.capture3('git rev-parse --short HEAD')
-      site.config['build_sha'] = stdout.strip if status.success?
+      site.config['build_id'] = Time.now.utc.strftime('%Y-%m-%d %H:%M UTC')
     end
   end
 end
