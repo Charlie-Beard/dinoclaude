@@ -10,7 +10,7 @@ image: /assets/images/og-image.png
   <header class="site-header">
     <a class="site-brand" href="{{ '/' | relative_url }}">DinoClaude</a>
     <div class="header-actions">
-      <button class="header-btn" onclick="shareGame()" aria-label="Share DinoClaude">Share</button>
+      <button class="header-btn" onclick="shareGame(this)" aria-label="Share DinoClaude">Share</button>
       <button class="header-btn" onclick="location.reload()" aria-label="Reset game">Reset</button>
     </div>
   </header>
@@ -25,8 +25,7 @@ image: /assets/images/og-image.png
   </footer>
 </div>
 <script>
-function shareGame() {
-  var btn = event.currentTarget;
+function shareGame(btn) {
   if (navigator.share) {
     navigator.share({
       title: 'DinoClaude',
