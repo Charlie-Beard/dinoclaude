@@ -8,11 +8,11 @@ Play it live at [dinoclaude.com](https://dinoclaude.com).
 
 | Action | Control |
 |--------|---------|
-| Jump | Space / Up arrow / Tap |
-| Duck | Down arrow |
-| Pause | P |
+| Jump | Space / Up arrow / Tap / Click |
+| Duck | Down arrow / hold Space / hold tap or click |
+| Pause | P / Esc |
 
-The game speeds up over time. Your high score is saved in the session.
+The game speeds up over time. Your high score is saved in your browser.
 
 ## Stack
 

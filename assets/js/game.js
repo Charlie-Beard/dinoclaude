@@ -108,6 +108,8 @@
 
   // ── Screen effects ────────────────────────────────────────────────────────
   let shakeFr = 0, flashFr = 0;
+  const REDUCED_MOTION = !!(window.matchMedia &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
   // ── Particles ─────────────────────────────────────────────────────────────
   let particles = [];
@@ -523,7 +525,9 @@
     canvas.style.height = H + 'px';
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     GY = Math.round(H * GROUND_Y_RATIO);
-    if (state !== S.RUNNING) char.y = GY;
+    // Keep a grounded character on the (possibly moved) ground; gravity only
+    // runs while airborne, so a stale y would strand it above or below GY.
+    if (char.ground || state === S.IDLE || state === S.DEAD) char.y = GY;
     initBg();
   }
 
@@ -574,6 +578,7 @@
     state = S.DEAD;
     buzz([30, 20, 70]);
     flashFr = 15;
+    if (!REDUCED_MOTION) shakeFr = 12;
     deathScore        = score;
     deathDisplayScore = 0;
     deathFrame        = 0;
@@ -607,11 +612,27 @@
   const inputSig = { signal: inputAC.signal };
 
   window.addEventListener('keydown', e => {
-    if (e.code === 'Escape') {
+    if (e.code === 'Escape' || e.code === 'KeyP') {
       if (showAutoModal)              { showAutoModal = false; return; }
-      if (autoMode)                   { stopAutoMode(); return; }
+      if (e.code === 'Escape' && autoMode) { stopAutoMode(); return; }
       if (state === S.RUNNING)        { state = S.PAUSED; return; }
       if (state === S.PAUSED)         { state = S.RUNNING; return; }
+      return;
+    }
+
+    if (e.code === 'ArrowUp') {
+      e.preventDefault();
+      initAudio();
+      if (showAutoModal) return;
+      if (!autoMode || state !== S.RUNNING) jump();
+      return;
+    }
+
+    if (e.code === 'ArrowDown') {
+      e.preventDefault();
+      initAudio();
+      if (showAutoModal || autoMode) return;
+      duck(true);
       return;
     }
 
@@ -632,6 +653,10 @@
   }, inputSig);
 
   window.addEventListener('keyup', e => {
+    if (e.code === 'ArrowDown') {
+      if (!autoMode) duck(false);
+      return;
+    }
     if (e.code !== 'Space') return;
     e.preventDefault();
     spaceDown = false;
@@ -654,7 +679,7 @@
     touchStart   = Date.now();
     touchDucking = false;
 
-    if (showAutoModal || (autoMode && state === S.RUNNING)) return;
+    if (showAutoModal || autoMode || state !== S.RUNNING) return;
     touchHoldTimer = setTimeout(() => { touchDucking = true; duck(true); }, 150);
   }, { passive: false, signal: inputAC.signal });
 
@@ -688,22 +713,22 @@
   // ── Mouse click handler ───────────────────────────────────────────────────
 
   canvas.addEventListener('click', e => {
+    if (suppressClick) { suppressClick = false; return; }
     const { x, y } = canvasXY(e);
 
     if (handleUITap(x, y, true)) return;
-
-    if (!autoMode && state === S.DEAD) { begin(); return; }
-    if (state === S.PAUSED && !autoMode) { jump(); return; }
+    if (autoMode) return;
+    jump();
   }, inputSig);
 
   // ── Mouse hold = duck ─────────────────────────────────────────────────────
 
-  let mouseHoldTimer = null, mouseDucking = false;
+  let mouseHoldTimer = null, mouseDucking = false, suppressClick = false;
 
   canvas.addEventListener('mousedown', e => {
     if (e.button !== 0) return;
     initAudio();
-    if (showAutoModal || (autoMode && state === S.RUNNING)) return;
+    if (showAutoModal || autoMode || state !== S.RUNNING) return;
     mouseDucking   = false;
     mouseHoldTimer = setTimeout(() => { mouseDucking = true; duck(true); }, 150);
   }, inputSig);
@@ -711,7 +736,7 @@
   canvas.addEventListener('mouseup', e => {
     if (e.button !== 0) return;
     clearTimeout(mouseHoldTimer);
-    if (mouseDucking) { mouseDucking = false; duck(false); }
+    if (mouseDucking) { mouseDucking = false; duck(false); suppressClick = true; }
   }, inputSig);
 
   canvas.addEventListener('mouseleave', () => {
@@ -1328,7 +1353,21 @@
     }
   }
 
-  function loop() { update(); draw(); requestAnimationFrame(loop); }
+  // Fixed-timestep loop: physics always advances at 60 steps/s regardless of
+  // display refresh rate (rAF fires at 120+ Hz on many devices). The delta is
+  // clamped so a backgrounded tab doesn't fast-forward the game on return.
+  const STEP_MS = 1000 / 60;
+  let lastT = 0, accMs = 0;
+
+  function loop(t) {
+    if (lastT) {
+      accMs += Math.min(t - lastT, 100);
+      while (accMs >= STEP_MS) { update(); accMs -= STEP_MS; }
+    }
+    lastT = t;
+    draw();
+    requestAnimationFrame(loop);
+  }
 
   char.y = GY;
   requestAnimationFrame(loop);
