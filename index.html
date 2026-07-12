@@ -26,17 +26,23 @@ image: /assets/images/og-image.png
 </div>
 <script>
 function shareGame(btn) {
+  function copyLink() {
+    if (!navigator.clipboard) return;
+    navigator.clipboard.writeText(location.href).then(function() {
+      btn.textContent = 'Copied!';
+      setTimeout(function() { btn.textContent = 'Share'; }, 1800);
+    }).catch(function() {});
+  }
   if (navigator.share) {
     navigator.share({
       title: 'DinoClaude',
       text: 'Jump over CONTEXT LIMIT walls and duck under OUT OF TOKENS clouds — play DinoClaude, a free browser runner game!',
       url: location.href
+    }).catch(function(err) {
+      if (!err || err.name !== 'AbortError') copyLink();
     });
-  } else if (navigator.clipboard) {
-    navigator.clipboard.writeText(location.href).then(function() {
-      btn.textContent = 'Copied!';
-      setTimeout(function() { btn.textContent = 'Share'; }, 1800);
-    });
+  } else {
+    copyLink();
   }
 }
 </script>

@@ -31,7 +31,7 @@ jobs:
       - name: Compress PNG assets
         run: |
           sudo apt-get install -y pngquant
-          pngquant --force --ext .png --quality=75-95 assets/images/og-image.png
+          pngquant --force --ext .png --quality=75-95 assets/images/*.png
 
       - name: Minify JavaScript
         run: npx --yes terser assets/js/game.js -o assets/js/game.js --compress --mangle

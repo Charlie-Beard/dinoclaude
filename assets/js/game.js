@@ -244,6 +244,7 @@
     'Model deprecated.',
   ];
   let deathLine = '', deathScore = 0, deathDisplayScore = 0, deathFrame = 0;
+  let deathNewHi = false;
 
   // ── Share button ──────────────────────────────────────────────────────────
   let shareBtnRect = null, shareConfirmFr = 0;
@@ -289,7 +290,6 @@
   let modalStartRect    = null;
   let stopAutoBtnRect   = null;
   let tryAutoBtnRect    = null;
-  let tryAgainBtnRect   = null;
 
   try { autoHiScore = parseInt(localStorage.getItem('dc-hi-auto'), 10) || 0; } catch (_) {}
 
@@ -420,7 +420,7 @@
 
   // Shared UI tap handler for both touch and click events.
   // Returns true if a UI element consumed the tap; caller should return early.
-  // Pass dismissModal=true from click events to auto-close modal on backdrop tap.
+  // Pass dismissModal=true to auto-close the modal on backdrop tap.
   function handleUITap(tx, ty, dismissModal) {
     if (showAutoModal) {
       if (inRect(tx, ty, modalCancelRect)) { showAutoModal = false; return true; }
@@ -584,22 +584,18 @@
     deathFrame        = 0;
     deathLine         = DEATH_LINES[Math.floor(Math.random() * DEATH_LINES.length)];
 
-    if (autoMode) {
-      if (score > autoHiScore) {
+    deathNewHi = score > (autoMode ? autoHiScore : hiScore);
+    if (deathNewHi) {
+      if (autoMode) {
         autoHiScore = score;
         try { localStorage.setItem('dc-hi-auto', autoHiScore); } catch (_) {}
-        setTimeout(() => playSound('hiscore'), 350);
       } else {
-        playSound('die');
-      }
-    } else {
-      if (score > hiScore) {
         hiScore = score;
         try { localStorage.setItem('dc-hi', hiScore); } catch (_) {}
-        setTimeout(() => playSound('hiscore'), 350);
-      } else {
-        playSound('die');
       }
+      setTimeout(() => playSound('hiscore'), 350);
+    } else {
+      playSound('die');
     }
   }
 
@@ -694,7 +690,7 @@
       const tx = (t.clientX - rect.left) * (W / rect.width);
       const ty = (t.clientY - rect.top)  * (H / rect.height);
 
-      if (handleUITap(tx, ty, false)) return;
+      if (handleUITap(tx, ty, true)) return;
 
       if (!touchDucking) {
         if (!autoMode || state !== S.RUNNING) jump();
@@ -748,6 +744,11 @@
     ro.disconnect();
     inputAC.abort();
   });
+
+  // Auto-pause when the tab is hidden so the player isn't mid-air on return.
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && state === S.RUNNING && !autoMode) state = S.PAUSED;
+  }, inputSig);
 
   // ── Bitmap pixel font (5×5) ───────────────────────────────────────────────
 
@@ -1232,10 +1233,7 @@
     ctx.fillStyle = C_MUTED;
     ctx.fillText(scoreLabel + deathDisplayScore, W / 2, H / 2 - 10);
 
-    const isNewHi = autoMode
-      ? (deathScore > 0 && deathScore >= autoHiScore)
-      : (deathScore > 0 && deathScore >= hiScore);
-    if (isNewHi) {
+    if (deathNewHi) {
       ctx.font = `bold 13px ${SYS}`;
       ctx.fillStyle = C_ACCENT;
       ctx.fillText(autoMode ? 'New auto record!' : 'New high score!', W / 2, H / 2 + 9);
@@ -1259,7 +1257,6 @@
     } else {
       const taW = 200, taH = 44;
       const taX = W / 2 - taW / 2, taY = H / 2 + 20;
-      tryAgainBtnRect = { x: taX, y: taY, w: taW, h: taH };
       rr(taX, taY, taW, taH, 10, C_ACCENT);
       ctx.font = `bold 16px ${SYS}`;
       ctx.fillStyle = '#ffffff';
